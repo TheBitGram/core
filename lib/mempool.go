@@ -1107,7 +1107,7 @@ func (mp *DeSoMempool) tryAcceptTransaction(
 	if err == nil {
 		mempoolTx.TxMeta = txnMeta
 	}
-
+	mp.bc.sqsQueue.SendSQSTxnMessage(mempoolTx)
 	glog.V(2).Infof("tryAcceptTransaction: Accepted transaction %v (pool size: %v)", txHash,
 		len(mp.poolMap))
 
