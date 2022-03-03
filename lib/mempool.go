@@ -1104,7 +1104,10 @@ func (mp *DeSoMempool) tryAcceptTransaction(
 	// Calculate metadata
 	mempoolTx.TxMeta = ComputeTransactionMetadata(tx, mp.backupUniversalUtxoView, nil, totalNanosPurchasedBefore,
 		usdCentsPerBitcoinBefore, totalInput, totalOutput, txFee, uint64(0), utxoOps)
-
+	if err == nil {
+		mempoolTx.TxMeta = txnMeta
+	}
+	mp.bc.sqsQueue.SendSQSTxnMessage(mempoolTx)
 	glog.V(2).Infof("tryAcceptTransaction: Accepted transaction %v (pool size: %v)", txHash,
 		len(mp.poolMap))
 
