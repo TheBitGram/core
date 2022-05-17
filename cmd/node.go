@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"context"
 	"encoding/hex"
 	"flag"
 	"fmt"
-	"context"
 	"net"
 	"os"
 	"os/signal"
@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/btcsuite/btcd/addrmgr"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/davecgh/go-spew/spew"
@@ -22,8 +24,6 @@ import (
 	"github.com/dgraph-io/badger/v3"
 	"github.com/go-pg/pg/v10"
 	"github.com/golang/glog"
-	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	"github.com/aws/aws-sdk-go-v2/config"
 	migrations "github.com/robinjoseph08/go-pg-migrations/v3"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 	"gopkg.in/DataDog/dd-trace-go.v1/profiler"
