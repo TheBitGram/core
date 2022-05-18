@@ -128,7 +128,8 @@ func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 	_, err = sqsQueue.sqsClient.SendMessage(context.TODO(), sendMessageInput)
 	if err != nil {
 		glog.Infof("SendSQSTxnMessage hash hex : %v", sqsInput.TransactionHashHex)
-		glog.Infof("SendSQSTxnMessage input : %v", sqsInput)
+		glog.Infof("SendSQSTxnMessage type : %v", sqsInput.TransactionType)
+		glog.Infof("SendSQSTxnMessage input : %v", sendMessageInput)
 		glog.Error("SendSQSTxnMessage: Error sending sqs message : %v", err)
 	}
 }
