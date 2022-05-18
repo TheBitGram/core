@@ -118,8 +118,8 @@ func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 	res, err := json.Marshal(sqsInput)
 	if err != nil {
 		glog.Errorf("SendSQSTxnMessage: Error marshaling transaction JSON : %v", err)
-		glog.info("SendSQSTxnMessage hash hex : %v", sqsInput.TransactionHashHex)
-		glog.info("SendSQSTxnMessage input : %v", sqsInput)
+		glog.Infof("SendSQSTxnMessage hash hex : %v", sqsInput.TransactionHashHex)
+		glog.Infof("SendSQSTxnMessage input : %v", sqsInput)
 	}
 
 	sendMessageInput := &sqs.SendMessageInput{
