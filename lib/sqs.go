@@ -130,7 +130,7 @@ func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 		glog.Infof("SendSQSTxnMessage hash hex : %v", sqsInput.TransactionHashHex)
 		glog.Infof("SendSQSTxnMessage type : %v", sqsInput.TransactionType)
 		glog.Infof("SendSQSTxnMessage input : %v", sendMessageInput)
-		glog.Error("SendSQSTxnMessage: Error sending sqs message : %v", err)
+		glog.Errorf("SendSQSTxnMessage: Error sending sqs message : %v", err)
 	}
 }
 
