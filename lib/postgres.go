@@ -2257,8 +2257,14 @@ func (postgres *Postgres) GetOutputs(outputs []*PGTransactionOutput) []*PGTransa
 
 func (postgres *Postgres) GetBlockRewardsForPublicKey(publicKey *PublicKey, startHeight uint32, endHeight uint32) []*PGTransactionOutput {
 	var transactionOutputs []*PGTransactionOutput
-	err := postgres.db.Model(&transactionOutputs).Where("public_key = ?", publicKey).
-		Where("height > ?", startHeight).Where("height < ?", endHeight).Select()
+	err := postgres.db.Model(&transactionOutputs).
+		ColumnExpr("pg_transaction_output.*").
+		Join("JOIN pg_transactions as pgt").
+		JoinOn("pg_transaction_output.output_hash = pgt.hash").
+		Where("pg_transaction_output.public_key = ?", publicKey).
+		Where("pgt.Type = ?", TxnTypeBlockReward).
+		Where("pg_transaction_output.height > ?", startHeight).
+		Where("pg_transaction_output.height < ?", endHeight).Select()
 	if err != nil {
 		return nil
 	}
@@ -2660,7 +2666,7 @@ func (postgres *Postgres) GetAllDAOCoinLimitOrdersForThisTransactor(transactorPK
 	return outputOrders, nil
 }
 
-func (postgres *Postgres) GetMatchingDAOCoinLimitOrders(inputOrder *DAOCoinLimitOrderEntry, lastSeenOrder *DAOCoinLimitOrderEntry) ([]*DAOCoinLimitOrderEntry, error) {
+func (postgres *Postgres) GetMatchingDAOCoinLimitOrders(inputOrder *DAOCoinLimitOrderEntry, lastSeenOrder *DAOCoinLimitOrderEntry, orderEntriesInView map[DAOCoinLimitOrderMapKey]bool) ([]*DAOCoinLimitOrderEntry, error) {
 	// TODO: for now we just pull all matching orders regardless
 	// of price and rely on the price comparison logic elsewhere.
 	// We do need to make sure we sort by price descending so that
@@ -2692,7 +2698,11 @@ func (postgres *Postgres) GetMatchingDAOCoinLimitOrders(inputOrder *DAOCoinLimit
 	var outputOrders []*DAOCoinLimitOrderEntry
 
 	for _, matchingOrder := range matchingOrders {
-		outputOrders = append(outputOrders, matchingOrder.ToDAOCoinLimitOrderEntry())
+		matchingOrderEntry := matchingOrder.ToDAOCoinLimitOrderEntry()
+		// Skip if order is already in the view.
+		if _, exists := orderEntriesInView[matchingOrderEntry.ToMapKey()]; !exists {
+			outputOrders = append(outputOrders, matchingOrderEntry)
+		}
 	}
 
 	return outputOrders, nil
