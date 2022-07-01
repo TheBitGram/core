@@ -151,8 +151,8 @@ func makePrivateMessageNotification(mempoolTxn *MempoolTx) (*PrivateMessageTrans
 	return &PrivateMessageTransaction {
 		AffectedPublicKeys:             affectedPublicKeys,
 		TransactorPublicKeyBase58Check:	mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
-		TimestampNanos: 				metadata.TimestampNanos,
-		EncryptedText: 					metadata.EncryptedText,
+		TimestampNanos:                 metadata.TimestampNanos,
+		EncryptedText:                 	metadata.EncryptedText,
 	}
 }
 
