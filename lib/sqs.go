@@ -36,6 +36,7 @@ type PrivateMessageTransaction struct {
 	AffectedPublicKeys []*AffectedPublicKey
 	TimestampNanos uint64
 	TransactorPublicKeyBase58Check string
+	RecipientPublicKey string
 	EncryptedText []byte
 }
 
@@ -151,6 +152,7 @@ func makePrivateMessageNotification(mempoolTxn *MempoolTx) (*PrivateMessageTrans
 	return &PrivateMessageTransaction {
 		AffectedPublicKeys:             affectedPublicKeys,
 		TransactorPublicKeyBase58Check:	mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
+		RecipientPublicKey:             string(metadata.RecipientPublicKey),
 		TimestampNanos:                 metadata.TimestampNanos,
 		EncryptedText:                 	metadata.EncryptedText,
 	}
