@@ -161,7 +161,7 @@ func makeSubmitPostNotification(mempoolTxn *MempoolTx) (*SubmitPostTransaction){
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
 	return &SubmitPostTransaction{
 		AffectedPublicKeys:             affectedPublicKeys,
-		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
+		TransactorPublicKeyBase58Check:	mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
 		PostHashToModify:               hex.EncodeToString(metadata.PostHashToModify),
 		ParentStakeID:                  hex.EncodeToString(metadata.ParentStakeID),
 		Body:                           string(metadata.Body),
