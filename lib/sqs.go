@@ -159,7 +159,7 @@ func makePrivateMessageNotification(mempoolTxn *MempoolTx) (*PrivateMessageTrans
 func makeSubmitPostNotification(mempoolTxn *MempoolTx) (*SubmitPostTransaction){
 	metadata := mempoolTxn.Tx.TxnMeta.(*SubmitPostMetadata)
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
-	return &SubmitPostNotification{
+	return &SubmitPostTransaction{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
 		PostHashToModify:               hex.EncodeToString(metadata.PostHashToModify),
@@ -175,7 +175,7 @@ func makeSubmitPostNotification(mempoolTxn *MempoolTx) (*SubmitPostTransaction){
 func makeLikeNotification(mempoolTxn *MempoolTx) (*LikeTransaction) {
 	metadata := mempoolTxn.Tx.TxnMeta.(*LikeMetadata)
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
-	return &LikeNotification{
+	return &LikeTransaction{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
@@ -187,7 +187,7 @@ func makeLikeNotification(mempoolTxn *MempoolTx) (*LikeTransaction) {
 func makeFollowNotification(mempoolTxn *MempoolTx) (*FollowTransaction) {
 	metadata := mempoolTxn.Tx.TxnMeta.(*FollowMetadata)
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
-	return &FollowNotification{
+	return &FollowTransaction{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
@@ -200,7 +200,7 @@ func makeBasicTransferNotification(mempoolTxn *MempoolTx) (*BasicTransferTransac
 	metadata := mempoolTxn.TxMeta.BasicTransferTxindexMetadata
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
 	// TODO figure out of if any other basic transfers besides diamonds are relevant to us
-	return &BasicTransferNotification{
+	return &BasicTransferTransaction{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
@@ -212,7 +212,7 @@ func makeBasicTransferNotification(mempoolTxn *MempoolTx) (*BasicTransferTransac
 func makeCreatorCoinNotification(mempoolTxn *MempoolTx) (*CreatorCoinTransaction) {
 	metadata := mempoolTxn.Tx.TxnMeta.(*CreatorCoinMetadataa)
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
-	return &CreatorCoinNotification{
+	return &CreatorCoinTransaction{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
@@ -229,7 +229,7 @@ func makeCreatorCoinNotification(mempoolTxn *MempoolTx) (*CreatorCoinTransaction
 func makeCreatorCoinTransferNotification(mempoolTxn *MempoolTx) (*CreatorCoinTransferTransaction) {
 	metadata := mempoolTxn.Tx.TxnMeta.(*CreatorCoinTransferMetadataa)
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
-	return &CreatorCoinTransferNotification{
+	return &CreatorCoinTransferTransaction{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
