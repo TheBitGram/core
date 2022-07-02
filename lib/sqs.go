@@ -105,7 +105,7 @@ func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 	} else if txn.TxnMeta.GetTxnType() == TxnTypeCreatorCoinTransfer {
 		notificationData = makeCreatorCoinTransferNotification(mempoolTxn)
 	} else {
-		// If we get here then the txn is not a type we're interested in
+		// If we get here then the txn is not a type we're interested ins
 		return
 	}
 
