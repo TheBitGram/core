@@ -14,6 +14,7 @@ import (
 type SQSQueue struct {
 	sqsClient *sqs.Client
 	queueUrl  *string
+	params    *DeSoParams
 }
 
 type SqsInput struct {
@@ -25,10 +26,11 @@ type SqsInput struct {
 type BitCloutNotification interface {
 }
 
-func NewSQSQueue(client *sqs.Client, queueUrl string) *SQSQueue {
+func NewSQSQueue(client *sqs.Client, queueUrl string, params *DeSoParams) *SQSQueue {
 	newSqsQueue := SQSQueue{}
 	newSqsQueue.sqsClient = client
 	newSqsQueue.queueUrl = &queueUrl
+	newSqsQueue.params = params
 	return &newSqsQueue
 }
 
@@ -116,7 +118,7 @@ func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 	case TxnTypeCreatorCoinTransfer:
 		transactionData = makeCreatorCoinTransferNotification(mempoolTxn)
 	case TxnTypePrivateMessage:
-		transactionData = makePrivateMessageNotification(mempoolTxn)
+		transactionData = makePrivateMessageNotification(mempoolTxn, sqsQueue.params)
 	default:
 		return
 	}
@@ -146,13 +148,13 @@ func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 	}
 }
 
-func makePrivateMessageNotification(mempoolTxn *MempoolTx) *PrivateMessageTransaction {
+func makePrivateMessageNotification(mempoolTxn *MempoolTx, params *DeSoParams) *PrivateMessageTransaction {
 	metadata := mempoolTxn.Tx.TxnMeta.(*PrivateMessageMetadata)
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
 	return &PrivateMessageTransaction{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
-		RecipientPublicKey:             string(metadata.RecipientPublicKey),
+		RecipientPublicKey:             PkToString(metadata.RecipientPublicKey, params),
 		TimestampNanos:                 metadata.TimestampNanos,
 		EncryptedText:                  metadata.EncryptedText,
 	}

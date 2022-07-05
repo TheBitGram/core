@@ -195,7 +195,7 @@ func (node *Node) Start(exitChannels ...*chan struct{}) {
 		}
 		// Create Amazon SQS API client using path style addressing.
 		client := sqs.NewFromConfig(cfg)
-		node.SQSQueue = lib.NewSQSQueue(client, queueURL)
+		node.SQSQueue = lib.NewSQSQueue(client, queueURL, node.Params)
 	}
 
 	// Setup eventManager
