@@ -1768,7 +1768,7 @@ func _verifyMessages(testMeta *TestMeta, expectedMessageEntries map[PublicKey][]
 	require.NoError(err)
 
 	for key, messageEntries := range expectedMessageEntries {
-		dbMessageEntries, _, err := utxoView.GetLimitedMessagesForUser(key[:], math.MaxUint64, 100)
+		dbMessageEntries, _, err := utxoView.GetLimitedMessagesForUser(key[:], math.MaxUint64, math.MaxUint64, 100)
 		require.NoError(err)
 		assert.Equal(len(messageEntries), len(dbMessageEntries))
 
