@@ -36,7 +36,7 @@ type PrivateMessageTransactionData struct {
 	TimestampNanos                 uint64
 	TransactorPublicKeyBase58Check string
 	RecipientPublicKey             string
-	EncryptedText                  []byte
+	EncryptedText                  string
 }
 
 type SubmitPostTransactionData struct {
@@ -153,7 +153,7 @@ func makePrivateMessageTransactionData(mempoolTxn *MempoolTx, params *DeSoParams
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
 		RecipientPublicKey:             PkToString(metadata.RecipientPublicKey, params),
 		TimestampNanos:                 metadata.TimestampNanos,
-		EncryptedText:                  metadata.EncryptedText,
+		EncryptedText:                  hex.EncodeToString(metadata.EncryptedText),
 	}
 }
 
