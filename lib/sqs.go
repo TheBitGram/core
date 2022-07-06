@@ -17,13 +17,10 @@ type SQSQueue struct {
 	params    *DeSoParams
 }
 
-type SqsInput struct {
+type TransactionMessage struct {
 	TransactionType    string
 	TransactionHashHex string
-	TransactionData    BitCloutNotification
-}
-
-type BitCloutNotification interface {
+	TransactionData    any
 }
 
 func NewSQSQueue(client *sqs.Client, queueUrl string, params *DeSoParams) *SQSQueue {
@@ -34,7 +31,7 @@ func NewSQSQueue(client *sqs.Client, queueUrl string, params *DeSoParams) *SQSQu
 	return &newSqsQueue
 }
 
-type PrivateMessageTransaction struct {
+type PrivateMessageTransactionData struct {
 	AffectedPublicKeys             []*AffectedPublicKey
 	TimestampNanos                 uint64
 	TransactorPublicKeyBase58Check string
@@ -42,7 +39,7 @@ type PrivateMessageTransaction struct {
 	EncryptedText                  []byte
 }
 
-type SubmitPostTransaction struct {
+type SubmitPostTransactionData struct {
 	AffectedPublicKeys             []*AffectedPublicKey
 	TimestampNanos                 uint64
 	TransactorPublicKeyBase58Check string
@@ -54,7 +51,7 @@ type SubmitPostTransaction struct {
 	IsHidden                       bool
 }
 
-type LikeTransaction struct {
+type LikeTransactionData struct {
 	AffectedPublicKeys             []*AffectedPublicKey
 	TimestampNanos                 uint64
 	TransactorPublicKeyBase58Check string
@@ -62,7 +59,7 @@ type LikeTransaction struct {
 	IsUnlike                       bool
 }
 
-type FollowTransaction struct {
+type FollowTransactionData struct {
 	AffectedPublicKeys             []*AffectedPublicKey
 	TimestampNanos                 uint64
 	TransactorPublicKeyBase58Check string
@@ -70,7 +67,7 @@ type FollowTransaction struct {
 	IsUnfollow                     bool
 }
 
-type BasicTransferTransaction struct {
+type BasicTransferTransactionData struct {
 	AffectedPublicKeys             []*AffectedPublicKey
 	TimestampNanos                 uint64
 	TransactorPublicKeyBase58Check string
@@ -78,7 +75,7 @@ type BasicTransferTransaction struct {
 	PostHashHex                    string
 }
 
-type CreatorCoinTransaction struct {
+type CreatorCoinTransactionData struct {
 	AffectedPublicKeys             []*AffectedPublicKey
 	TimestampNanos                 uint64
 	TransactorPublicKeyBase58Check string
@@ -91,7 +88,7 @@ type CreatorCoinTransaction struct {
 	MinCreatorCoinExpectedNanos    uint64
 }
 
-type CreatorCoinTransferTransaction struct {
+type CreatorCoinTransferTransactionData struct {
 	AffectedPublicKeys             []*AffectedPublicKey
 	TimestampNanos                 uint64
 	TransactorPublicKeyBase58Check string
@@ -103,33 +100,33 @@ type CreatorCoinTransferTransaction struct {
 // Filter unnecessary fields and send txn to the configured SQS Queue
 func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 	txn := mempoolTxn.Tx
-	var transactionData BitCloutNotification
+	var transactionData any
 	switch txn.TxnMeta.GetTxnType() {
 	case TxnTypeSubmitPost:
-		transactionData = makeSubmitPostNotification(mempoolTxn)
+		transactionData = makeSubmitPostTransactionData(mempoolTxn)
 	case TxnTypeLike:
-		transactionData = makeLikeNotification(mempoolTxn)
+		transactionData = makeLikeTransactionData(mempoolTxn)
 	case TxnTypeFollow:
-		transactionData = makeFollowNotification(mempoolTxn)
+		transactionData = makeFollowTransactionData(mempoolTxn)
 	case TxnTypeBasicTransfer:
-		transactionData = makeBasicTransferNotification(mempoolTxn)
+		transactionData = makeBasicTransferTransactionData(mempoolTxn)
 	case TxnTypeCreatorCoin:
-		transactionData = makeCreatorCoinNotification(mempoolTxn)
+		transactionData = makeCreatorCoinTransactionData(mempoolTxn)
 	case TxnTypeCreatorCoinTransfer:
-		transactionData = makeCreatorCoinTransferNotification(mempoolTxn)
+		transactionData = makeCreatorCoinTransferTransactionData(mempoolTxn)
 	case TxnTypePrivateMessage:
-		transactionData = makePrivateMessageNotification(mempoolTxn, sqsQueue.params)
+		transactionData = makePrivateMessageTransactionData(mempoolTxn, sqsQueue.params)
 	default:
 		return
 	}
 
-	sqsInput := SqsInput{
+	transactionMessage := TransactionMessage{
 		TransactionType:    txn.TxnMeta.GetTxnType().String(),
 		TransactionHashHex: hex.EncodeToString(txn.Hash()[:]),
 		TransactionData:    transactionData,
 	}
 
-	res, err := json.Marshal(sqsInput)
+	res, err := json.Marshal(transactionMessage)
 	if err != nil {
 		glog.Errorf("SendSQSTxnMessage: Error marshaling transaction JSON : %v", err)
 	}
@@ -141,17 +138,17 @@ func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 	}
 	_, err = sqsQueue.sqsClient.SendMessage(context.TODO(), sendMessageInput)
 	if err != nil {
-		glog.Infof("SendSQSTxnMessage hash hex : %v", sqsInput.TransactionHashHex)
-		glog.Infof("SendSQSTxnMessage type : %v", sqsInput.TransactionType)
+		glog.Infof("SendSQSTxnMessage hash hex : %v", transactionMessage.TransactionHashHex)
+		glog.Infof("SendSQSTxnMessage type : %v", transactionMessage.TransactionType)
 		glog.Infof("SendSQSTxnMessage input : %v", sendMessageInput)
 		glog.Errorf("SendSQSTxnMessage: Error sending sqs message : %v", err)
 	}
 }
 
-func makePrivateMessageNotification(mempoolTxn *MempoolTx, params *DeSoParams) *PrivateMessageTransaction {
+func makePrivateMessageTransactionData(mempoolTxn *MempoolTx, params *DeSoParams) *PrivateMessageTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*PrivateMessageMetadata)
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
-	return &PrivateMessageTransaction{
+	return &PrivateMessageTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
 		RecipientPublicKey:             PkToString(metadata.RecipientPublicKey, params),
@@ -160,10 +157,10 @@ func makePrivateMessageNotification(mempoolTxn *MempoolTx, params *DeSoParams) *
 	}
 }
 
-func makeSubmitPostNotification(mempoolTxn *MempoolTx) *SubmitPostTransaction {
+func makeSubmitPostTransactionData(mempoolTxn *MempoolTx) *SubmitPostTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*SubmitPostMetadata)
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
-	return &SubmitPostTransaction{
+	return &SubmitPostTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
 		PostHashToModify:               hex.EncodeToString(metadata.PostHashToModify),
@@ -176,10 +173,10 @@ func makeSubmitPostNotification(mempoolTxn *MempoolTx) *SubmitPostTransaction {
 	}
 }
 
-func makeLikeNotification(mempoolTxn *MempoolTx) *LikeTransaction {
+func makeLikeTransactionData(mempoolTxn *MempoolTx) *LikeTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*LikeMetadata)
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
-	return &LikeTransaction{
+	return &LikeTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
@@ -188,10 +185,10 @@ func makeLikeNotification(mempoolTxn *MempoolTx) *LikeTransaction {
 	}
 }
 
-func makeFollowNotification(mempoolTxn *MempoolTx) *FollowTransaction {
+func makeFollowTransactionData(mempoolTxn *MempoolTx) *FollowTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*FollowMetadata)
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
-	return &FollowTransaction{
+	return &FollowTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
@@ -200,11 +197,11 @@ func makeFollowNotification(mempoolTxn *MempoolTx) *FollowTransaction {
 	}
 }
 
-func makeBasicTransferNotification(mempoolTxn *MempoolTx) *BasicTransferTransaction {
+func makeBasicTransferTransactionData(mempoolTxn *MempoolTx) *BasicTransferTransactionData {
 	metadata := mempoolTxn.TxMeta.BasicTransferTxindexMetadata
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
 	// TODO figure out of if any other basic transfers besides diamonds are relevant to us
-	return &BasicTransferTransaction{
+	return &BasicTransferTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
@@ -213,10 +210,10 @@ func makeBasicTransferNotification(mempoolTxn *MempoolTx) *BasicTransferTransact
 	}
 }
 
-func makeCreatorCoinNotification(mempoolTxn *MempoolTx) *CreatorCoinTransaction {
+func makeCreatorCoinTransactionData(mempoolTxn *MempoolTx) *CreatorCoinTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*CreatorCoinMetadataa)
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
-	return &CreatorCoinTransaction{
+	return &CreatorCoinTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
@@ -230,10 +227,10 @@ func makeCreatorCoinNotification(mempoolTxn *MempoolTx) *CreatorCoinTransaction 
 	}
 }
 
-func makeCreatorCoinTransferNotification(mempoolTxn *MempoolTx) *CreatorCoinTransferTransaction {
+func makeCreatorCoinTransferTransactionData(mempoolTxn *MempoolTx) *CreatorCoinTransferTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*CreatorCoinTransferMetadataa)
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
-	return &CreatorCoinTransferTransaction{
+	return &CreatorCoinTransferTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
