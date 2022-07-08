@@ -20,7 +20,7 @@ type SQSQueue struct {
 type TransactionMessage struct {
 	TransactionType    string
 	TransactionHashHex string
-	TransactionData    any
+	TransactionData    interface{}
 }
 
 func NewSQSQueue(client *sqs.Client, queueUrl string, params *DeSoParams) *SQSQueue {
@@ -100,7 +100,7 @@ type CreatorCoinTransferTransactionData struct {
 // Filter unnecessary fields and send txn to the configured SQS Queue
 func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 	txn := mempoolTxn.Tx
-	var transactionData any
+	var transactionData interface{}
 	switch txn.TxnMeta.GetTxnType() {
 	case TxnTypeSubmitPost:
 		transactionData = makeSubmitPostTransactionData(mempoolTxn)
