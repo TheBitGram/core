@@ -1401,7 +1401,7 @@ func _enumerateLimitedMessagesForMessagingKeysReversedWithTxn(
 		opts := badger.DefaultIteratorOptions
 		opts.Reverse = true
 		iterator := txn.NewIterator(opts)
-		iterator.Seek(append(prefix, UintToBuf(maxTimestampNanos)...))
+		iterator.Seek(append(prefix, EncodeUint64(maxTimestampNanos)...))
 		defer iterator.Close()
 		messagingIterators = append(messagingIterators, iterator)
 	}
@@ -1421,7 +1421,7 @@ func _enumerateLimitedMessagesForMessagingKeysReversedWithTxn(
 			// Get the timestamp from the item key
 			key := messagingIterators[ii].Item().Key()
 			rr := bytes.NewReader(key[len(prefixes[ii]):])
-			timestamp, err := ReadUvarint(rr)
+			timestamp, err := binary.ReadUvarint(rr)
 			if err != nil {
 				return nil, errors.Wrapf(err, "_enumerateLimitedMessagesForMessagingKeysReversedWithTxn: problem reading timestamp "+
 					"for messaging iterator from prefix (%v) at key (%v)", prefixes[ii], messagingIterators[ii].Item().Key())
