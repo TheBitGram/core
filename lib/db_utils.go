@@ -1421,7 +1421,8 @@ func _enumerateLimitedMessagesForMessagingKeysReversedWithTxn(
 			// Get the timestamp from the item key
 			key := messagingIterators[ii].Item().Key()
 			rr := bytes.NewReader(key[len(prefixes[ii]):])
-			timestamp, err := binary.ReadUvarint(rr)
+			var timestamp uint64
+			err := binary.Read(rr, binary.BigEndian, &timestamp)
 			if err != nil {
 				return nil, errors.Wrapf(err, "_enumerateLimitedMessagesForMessagingKeysReversedWithTxn: problem reading timestamp "+
 					"for messaging iterator from prefix (%v) at key (%v)", prefixes[ii], messagingIterators[ii].Item().Key())
