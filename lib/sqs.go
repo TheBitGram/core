@@ -36,6 +36,8 @@ type PrivateMessageTransactionData struct {
 	TimestampNanos                 uint64
 	TransactorPublicKeyBase58Check string
 	RecipientPublicKey             string
+	SenderMessagingGroupKeyName    string
+	RecipientMessagingGroupKeyName string
 	EncryptedText                  string
 }
 
@@ -147,11 +149,27 @@ func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 
 func makePrivateMessageTransactionData(mempoolTxn *MempoolTx, params *DeSoParams) *PrivateMessageTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*PrivateMessageMetadata)
+	extraData := mempoolTxn.Tx.ExtraData
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
+
+	senderMessagingGroupKeyNameBytes, foundSenderGroupKeyName := extraData[SenderMessagingGroupKeyName]
+	senderMessagingGroupKeyName := ""
+	if foundSenderGroupKeyName {
+		senderMessagingGroupKeyName = string(senderMessagingGroupKeyNameBytes)
+	}
+
+	recipientMessagingGroupKeyNameBytes, foundRecipientGroupKeyName := extraData[RecipientMessagingGroupKeyName]
+	recipientMessagingGroupKeyName := ""
+	if foundRecipientGroupKeyName {
+		recipientMessagingGroupKeyName = string(recipientMessagingGroupKeyNameBytes)
+	}
+
 	return &PrivateMessageTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
 		RecipientPublicKey:             PkToString(metadata.RecipientPublicKey, params),
+		SenderMessagingGroupKeyName:    senderMessagingGroupKeyName,
+		RecipientMessagingGroupKeyName: recipientMessagingGroupKeyName,
 		TimestampNanos:                 metadata.TimestampNanos,
 		EncryptedText:                  hex.EncodeToString(metadata.EncryptedText),
 	}
