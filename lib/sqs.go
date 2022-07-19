@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
-	"time"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/golang/glog"
+	"github.com/google/uuid"
+	"time"
 )
 
 type SQSQueue struct {
@@ -36,6 +37,8 @@ type PrivateMessageTransactionData struct {
 	TimestampNanos                 uint64
 	TransactorPublicKeyBase58Check string
 	RecipientPublicKey             string
+	SenderMessagingGroupKeyName    string
+	RecipientMessagingGroupKeyName string
 	EncryptedText                  string
 }
 
@@ -131,10 +134,17 @@ func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 		glog.Errorf("SendSQSTxnMessage: Error marshaling transaction JSON : %v", err)
 	}
 
+	messageAttributes := make(map[string]types.MessageAttributeValue)
+	messageAttributes["messageId"] = types.MessageAttributeValue{
+		DataType:    aws.String("String"),
+		StringValue: aws.String(uuid.NewString()),
+	}
+
 	sendMessageInput := &sqs.SendMessageInput{
-		DelaySeconds: 0,
-		MessageBody:  aws.String(string(res)),
-		QueueUrl:     sqsQueue.queueUrl,
+		DelaySeconds:      0,
+		MessageBody:       aws.String(string(res)),
+		MessageAttributes: messageAttributes,
+		QueueUrl:          sqsQueue.queueUrl,
 	}
 	_, err = sqsQueue.sqsClient.SendMessage(context.TODO(), sendMessageInput)
 	if err != nil {
@@ -147,11 +157,27 @@ func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 
 func makePrivateMessageTransactionData(mempoolTxn *MempoolTx, params *DeSoParams) *PrivateMessageTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*PrivateMessageMetadata)
+	extraData := mempoolTxn.Tx.ExtraData
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
+
+	senderMessagingGroupKeyNameBytes, foundSenderGroupKeyName := extraData[SenderMessagingGroupKeyName]
+	senderMessagingGroupKeyName := ""
+	if foundSenderGroupKeyName {
+		senderMessagingGroupKeyName = string(senderMessagingGroupKeyNameBytes)
+	}
+
+	recipientMessagingGroupKeyNameBytes, foundRecipientGroupKeyName := extraData[RecipientMessagingGroupKeyName]
+	recipientMessagingGroupKeyName := ""
+	if foundRecipientGroupKeyName {
+		recipientMessagingGroupKeyName = string(recipientMessagingGroupKeyNameBytes)
+	}
+
 	return &PrivateMessageTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
 		RecipientPublicKey:             PkToString(metadata.RecipientPublicKey, params),
+		SenderMessagingGroupKeyName:    senderMessagingGroupKeyName,
+		RecipientMessagingGroupKeyName: recipientMessagingGroupKeyName,
 		TimestampNanos:                 metadata.TimestampNanos,
 		EncryptedText:                  hex.EncodeToString(metadata.EncryptedText),
 	}
