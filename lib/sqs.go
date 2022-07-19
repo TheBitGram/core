@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
-	"time"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/golang/glog"
+	"github.com/google/uuid"
+	"time"
 )
 
 type SQSQueue struct {
@@ -133,10 +134,17 @@ func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 		glog.Errorf("SendSQSTxnMessage: Error marshaling transaction JSON : %v", err)
 	}
 
+	messageAttributes := make(map[string]types.MessageAttributeValue)
+	messageAttributes["messageId"] = types.MessageAttributeValue{
+		DataType:    aws.String("String"),
+		StringValue: aws.String(uuid.NewString()),
+	}
+
 	sendMessageInput := &sqs.SendMessageInput{
-		DelaySeconds: 0,
-		MessageBody:  aws.String(string(res)),
-		QueueUrl:     sqsQueue.queueUrl,
+		DelaySeconds:      0,
+		MessageBody:       aws.String(string(res)),
+		MessageAttributes: messageAttributes,
+		QueueUrl:          sqsQueue.queueUrl,
 	}
 	_, err = sqsQueue.sqsClient.SendMessage(context.TODO(), sendMessageInput)
 	if err != nil {
