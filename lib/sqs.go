@@ -110,7 +110,7 @@ func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 	case TxnTypeLike:
 		transactionData = makeLikeTransactionData(mempoolTxn)
 	case TxnTypeFollow:
-		transactionData = makeFollowTransactionData(mempoolTxn)
+		transactionData = makeFollowTransactionData(mempoolTxn, sqsQueue.params)
 	case TxnTypeBasicTransfer:
 		transactionData = makeBasicTransferTransactionData(mempoolTxn)
 	case TxnTypeCreatorCoin:
@@ -211,14 +211,14 @@ func makeLikeTransactionData(mempoolTxn *MempoolTx) *LikeTransactionData {
 	}
 }
 
-func makeFollowTransactionData(mempoolTxn *MempoolTx) *FollowTransactionData {
+func makeFollowTransactionData(mempoolTxn *MempoolTx, params *DeSoParams) *FollowTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*FollowMetadata)
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
 	return &FollowTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
-		FollowedPublicKey:              PkToString(metadata.FollowedPublicKey),
+		FollowedPublicKey:              PkToString(metadata.FollowedPublicKey, params),
 		IsUnfollow:                     metadata.IsUnfollow,
 	}
 }
