@@ -114,9 +114,9 @@ func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 	case TxnTypeBasicTransfer:
 		transactionData = makeBasicTransferTransactionData(mempoolTxn)
 	case TxnTypeCreatorCoin:
-		transactionData = makeCreatorCoinTransactionData(mempoolTxn)
+		transactionData = makeCreatorCoinTransactionData(mempoolTxn, sqsQueue.params)
 	case TxnTypeCreatorCoinTransfer:
-		transactionData = makeCreatorCoinTransferTransactionData(mempoolTxn)
+		transactionData = makeCreatorCoinTransferTransactionData(mempoolTxn, sqsQueue.params)
 	case TxnTypePrivateMessage:
 		transactionData = makePrivateMessageTransactionData(mempoolTxn, sqsQueue.params)
 	default:
@@ -206,7 +206,7 @@ func makeLikeTransactionData(mempoolTxn *MempoolTx) *LikeTransactionData {
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
-		LikedPostHashHex:               hex.EncodeToString([]byte(metadata.LikedPostHash[:])),
+		LikedPostHashHex:               hex.EncodeToString(metadata.LikedPostHash[:]),
 		IsUnlike:                       metadata.IsUnlike,
 	}
 }
@@ -218,7 +218,7 @@ func makeFollowTransactionData(mempoolTxn *MempoolTx) *FollowTransactionData {
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
-		FollowedPublicKey:              hex.EncodeToString(metadata.FollowedPublicKey),
+		FollowedPublicKey:              PkToString(metadata.FollowedPublicKey),
 		IsUnfollow:                     metadata.IsUnfollow,
 	}
 }
@@ -236,14 +236,14 @@ func makeBasicTransferTransactionData(mempoolTxn *MempoolTx) *BasicTransferTrans
 	}
 }
 
-func makeCreatorCoinTransactionData(mempoolTxn *MempoolTx) *CreatorCoinTransactionData {
+func makeCreatorCoinTransactionData(mempoolTxn *MempoolTx, params *DeSoParams) *CreatorCoinTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*CreatorCoinMetadataa)
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
 	return &CreatorCoinTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
-		ProfilePublicKey:               hex.EncodeToString(metadata.ProfilePublicKey),
+		ProfilePublicKey:               PkToString(metadata.ProfilePublicKey, params),
 		OperationType:                  metadata.OperationType,
 		BitCloutToSellNanos:            metadata.DeSoToSellNanos,
 		CreatorCoinToSellNanos:         metadata.CreatorCoinToSellNanos,
@@ -253,15 +253,15 @@ func makeCreatorCoinTransactionData(mempoolTxn *MempoolTx) *CreatorCoinTransacti
 	}
 }
 
-func makeCreatorCoinTransferTransactionData(mempoolTxn *MempoolTx) *CreatorCoinTransferTransactionData {
+func makeCreatorCoinTransferTransactionData(mempoolTxn *MempoolTx, params *DeSoParams) *CreatorCoinTransferTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*CreatorCoinTransferMetadataa)
 	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
 	return &CreatorCoinTransferTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
-		ProfilePublicKey:               hex.EncodeToString(metadata.ProfilePublicKey),
+		ProfilePublicKey:               PkToString(metadata.ProfilePublicKey, params),
 		CreatorCoinToTransferNanos:     metadata.CreatorCoinToTransferNanos,
-		ReceiverPublicKey:              hex.EncodeToString(metadata.ReceiverPublicKey),
+		ReceiverPublicKey:              PkToString(metadata.ReceiverPublicKey, params),
 	}
 }
