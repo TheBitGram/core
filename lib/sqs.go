@@ -19,9 +19,9 @@ type SQSQueue struct {
 }
 
 type TransactionMessage struct {
-	TransactionType    string
-	TransactionHashHex string
-	TransactionData    interface{}
+	TransactionType    string      `json:"transactionType"`
+	TransactionHashHex string      `json:"transactionHashHex"`
+	TransactionData    interface{} `json:"transactionData"`
 }
 
 func NewSQSQueue(client *sqs.Client, queueUrl string, params *DeSoParams) *SQSQueue {
@@ -32,72 +32,78 @@ func NewSQSQueue(client *sqs.Client, queueUrl string, params *DeSoParams) *SQSQu
 	return &newSqsQueue
 }
 
+type AffectedPublicKeyForJson struct {
+	PublicKeyBase58Check string
+	// Metadata about how this public key was affected by the transaction.
+	Metadata string
+}
+
 type PrivateMessageTransactionData struct {
-	AffectedPublicKeys             []*AffectedPublicKey
-	TimestampNanos                 uint64
-	TransactorPublicKeyBase58Check string
-	RecipientPublicKey             string
-	SenderMessagingGroupKeyName    string
-	RecipientMessagingGroupKeyName string
-	EncryptedText                  string
+	AffectedPublicKeys             []*AffectedPublicKeyForJson `json:"affectedPublicKeys"`
+	TimestampNanos                 uint64                      `json:"timestampNanos"`
+	TransactorPublicKeyBase58Check string                      `json:"transactorPublicKeyBase58Check"`
+	RecipientPublicKey             string                      `json:"recipientPublicKey"`
+	SenderMessagingGroupKeyName    string                      `json:"senderMessagingGroupKeyName"`
+	RecipientMessagingGroupKeyName string                      `json:"recipientMessagingGroupKeyName"`
+	EncryptedText                  string                      `json:"encryptedText"`
 }
 
 type SubmitPostTransactionData struct {
-	AffectedPublicKeys             []*AffectedPublicKey
-	TimestampNanos                 uint64
-	TransactorPublicKeyBase58Check string
-	PostHashToModify               string
-	ParentStakeID                  string
-	Body                           string
-	CreatorBasisPoints             uint64
-	StakeMultipleBasisPoints       uint64
-	IsHidden                       bool
+	AffectedPublicKeys             []*AffectedPublicKeyForJson `json:"affectedPublicKeys"`
+	TimestampNanos                 uint64                      `json:"timestampNanos"`
+	TransactorPublicKeyBase58Check string                      `json:"transactorPublicKeyBase58Check"`
+	PostHashToModify               string                      `json:"postHashToModify"`
+	ParentStakeID                  string                      `json:"parentStakeID"`
+	Body                           string                      `json:"body"`
+	CreatorBasisPoints             uint64                      `json:"creatorBasisPoints"`
+	StakeMultipleBasisPoints       uint64                      `json:"stakeMultipleBasisPoints"`
+	IsHidden                       bool                        `json:"isHidden"`
 }
 
 type LikeTransactionData struct {
-	AffectedPublicKeys             []*AffectedPublicKey
-	TimestampNanos                 uint64
-	TransactorPublicKeyBase58Check string
-	LikedPostHashHex               string
-	IsUnlike                       bool
+	AffectedPublicKeys             []*AffectedPublicKeyForJson `json:"affectedPublicKeys"`
+	TimestampNanos                 uint64                      `json:"timestampNanos"`
+	TransactorPublicKeyBase58Check string                      `json:"transactorPublicKeyBase58Check"`
+	LikedPostHashHex               string                      `json:"LikedPostHashHex"`
+	IsUnlike                       bool                        `json:"isUnlike"`
 }
 
 type FollowTransactionData struct {
-	AffectedPublicKeys             []*AffectedPublicKey
-	TimestampNanos                 uint64
-	TransactorPublicKeyBase58Check string
-	FollowedPublicKey              string
-	IsUnfollow                     bool
+	AffectedPublicKeys             []*AffectedPublicKeyForJson `json:"affectedPublicKeys"`
+	TimestampNanos                 uint64                      `json:"timestampNanos"`
+	TransactorPublicKeyBase58Check string                      `json:"transactorPublicKeyBase58Check"`
+	FollowedPublicKey              string                      `json:"followedPublicKey"`
+	IsUnfollow                     bool                        `json:"isUnfollow"`
 }
 
 type BasicTransferTransactionData struct {
-	AffectedPublicKeys             []*AffectedPublicKey
-	TimestampNanos                 uint64
-	TransactorPublicKeyBase58Check string
-	DiamondLevel                   int64
-	PostHashHex                    string
+	AffectedPublicKeys             []*AffectedPublicKeyForJson `json:"affectedPublicKeys"`
+	TimestampNanos                 uint64                      `json:"timestampNanos"`
+	TransactorPublicKeyBase58Check string                      `json:"transactorPublicKeyBase58Check"`
+	DiamondLevel                   int64                       `json:"diamondLevel"`
+	PostHashHex                    string                      `json:"postHashHex"`
 }
 
 type CreatorCoinTransactionData struct {
-	AffectedPublicKeys             []*AffectedPublicKey
-	TimestampNanos                 uint64
-	TransactorPublicKeyBase58Check string
-	ProfilePublicKey               string
-	OperationType                  CreatorCoinOperationType
-	BitCloutToSellNanos            uint64
-	CreatorCoinToSellNanos         uint64
-	BitCloutToAddNanos             uint64
-	MinBitCloutExpectedNanos       uint64
-	MinCreatorCoinExpectedNanos    uint64
+	AffectedPublicKeys             []*AffectedPublicKeyForJson `json:"affectedPublicKeys"`
+	TimestampNanos                 uint64                      `json:"timestampNanos"`
+	TransactorPublicKeyBase58Check string                      `json:"transactorPublicKeyBase58Check"`
+	ProfilePublicKey               string                      `json:"profilePublicKey"`
+	OperationType                  CreatorCoinOperationType    `json:"operationType"`
+	DeSoToSellNanos                uint64                      `json:"deSoToSellNanos"`
+	CreatorCoinToSellNanos         uint64                      `json:"creatorCoinToSellNanos"`
+	DeSoToAddNanos                 uint64                      `json:"deSoToAddNanos"`
+	MinDeSoExpectedNanos           uint64                      `json:"minDeSoExpectedNanos"`
+	MinCreatorCoinExpectedNanos    uint64                      `json:"minCreatorCoinExpectedNanos"`
 }
 
 type CreatorCoinTransferTransactionData struct {
-	AffectedPublicKeys             []*AffectedPublicKey
-	TimestampNanos                 uint64
-	TransactorPublicKeyBase58Check string
-	ProfilePublicKey               string
-	CreatorCoinToTransferNanos     uint64
-	ReceiverPublicKey              string
+	AffectedPublicKeys             []*AffectedPublicKeyForJson `json:"affectedPublicKeys"`
+	TimestampNanos                 uint64                      `json:"timestampNanos"`
+	TransactorPublicKeyBase58Check string                      `json:"transactorPublicKeyBase58Check"`
+	ProfilePublicKey               string                      `json:"profilePublicKey"`
+	CreatorCoinToTransferNanos     uint64                      `json:"creatorCoinToTransferNanos"`
+	ReceiverPublicKey              string                      `json:"receiverPublicKey"`
 }
 
 // Filter unnecessary fields and send txn to the configured SQS Queue
@@ -135,8 +141,13 @@ func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 	}
 
 	messageAttributes := make(map[string]types.MessageAttributeValue)
+	stringDataType := aws.String("String")
+	messageAttributes["contentType"] = types.MessageAttributeValue{
+		DataType:    stringDataType,
+		StringValue: aws.String("application/json"),
+	}
 	messageAttributes["messageId"] = types.MessageAttributeValue{
-		DataType:    aws.String("String"),
+		DataType:    stringDataType,
 		StringValue: aws.String(uuid.NewString()),
 	}
 
@@ -155,10 +166,18 @@ func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
 	}
 }
 
+func getJson(affectedPublicKeys []*AffectedPublicKey) []*AffectedPublicKeyForJson {
+	affectedPublicKeysForJson := make([]*AffectedPublicKeyForJson, len(affectedPublicKeys))
+	for index := range affectedPublicKeys {
+		affectedPublicKeysForJson[index] = (*AffectedPublicKeyForJson)(affectedPublicKeys[index])
+	}
+	return affectedPublicKeysForJson
+}
+
 func makePrivateMessageTransactionData(mempoolTxn *MempoolTx, params *DeSoParams) *PrivateMessageTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*PrivateMessageMetadata)
 	extraData := mempoolTxn.Tx.ExtraData
-	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
+	affectedPublicKeys := getJson(mempoolTxn.TxMeta.AffectedPublicKeys)
 
 	senderMessagingGroupKeyNameBytes, foundSenderGroupKeyName := extraData[SenderMessagingGroupKeyName]
 	senderMessagingGroupKeyName := ""
@@ -185,7 +204,7 @@ func makePrivateMessageTransactionData(mempoolTxn *MempoolTx, params *DeSoParams
 
 func makeSubmitPostTransactionData(mempoolTxn *MempoolTx) *SubmitPostTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*SubmitPostMetadata)
-	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
+	affectedPublicKeys := getJson(mempoolTxn.TxMeta.AffectedPublicKeys)
 	return &SubmitPostTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
@@ -201,7 +220,7 @@ func makeSubmitPostTransactionData(mempoolTxn *MempoolTx) *SubmitPostTransaction
 
 func makeLikeTransactionData(mempoolTxn *MempoolTx) *LikeTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*LikeMetadata)
-	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
+	affectedPublicKeys := getJson(mempoolTxn.TxMeta.AffectedPublicKeys)
 	return &LikeTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
@@ -213,7 +232,7 @@ func makeLikeTransactionData(mempoolTxn *MempoolTx) *LikeTransactionData {
 
 func makeFollowTransactionData(mempoolTxn *MempoolTx, params *DeSoParams) *FollowTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*FollowMetadata)
-	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
+	affectedPublicKeys := getJson(mempoolTxn.TxMeta.AffectedPublicKeys)
 	return &FollowTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
@@ -225,7 +244,7 @@ func makeFollowTransactionData(mempoolTxn *MempoolTx, params *DeSoParams) *Follo
 
 func makeBasicTransferTransactionData(mempoolTxn *MempoolTx) *BasicTransferTransactionData {
 	metadata := mempoolTxn.TxMeta.BasicTransferTxindexMetadata
-	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
+	affectedPublicKeys := getJson(mempoolTxn.TxMeta.AffectedPublicKeys)
 	// TODO figure out of if any other basic transfers besides diamonds are relevant to us
 	return &BasicTransferTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
@@ -238,24 +257,24 @@ func makeBasicTransferTransactionData(mempoolTxn *MempoolTx) *BasicTransferTrans
 
 func makeCreatorCoinTransactionData(mempoolTxn *MempoolTx, params *DeSoParams) *CreatorCoinTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*CreatorCoinMetadataa)
-	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
+	affectedPublicKeys := getJson(mempoolTxn.TxMeta.AffectedPublicKeys)
 	return &CreatorCoinTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
 		TransactorPublicKeyBase58Check: mempoolTxn.TxMeta.TransactorPublicKeyBase58Check,
 		ProfilePublicKey:               PkToString(metadata.ProfilePublicKey, params),
 		OperationType:                  metadata.OperationType,
-		BitCloutToSellNanos:            metadata.DeSoToSellNanos,
+		DeSoToSellNanos:                metadata.DeSoToSellNanos,
 		CreatorCoinToSellNanos:         metadata.CreatorCoinToSellNanos,
-		BitCloutToAddNanos:             metadata.DeSoToAddNanos,
-		MinBitCloutExpectedNanos:       metadata.MinDeSoExpectedNanos,
+		DeSoToAddNanos:                 metadata.DeSoToAddNanos,
+		MinDeSoExpectedNanos:           metadata.MinDeSoExpectedNanos,
 		MinCreatorCoinExpectedNanos:    metadata.MinCreatorCoinExpectedNanos,
 	}
 }
 
 func makeCreatorCoinTransferTransactionData(mempoolTxn *MempoolTx, params *DeSoParams) *CreatorCoinTransferTransactionData {
 	metadata := mempoolTxn.Tx.TxnMeta.(*CreatorCoinTransferMetadataa)
-	affectedPublicKeys := mempoolTxn.TxMeta.AffectedPublicKeys
+	affectedPublicKeys := getJson(mempoolTxn.TxMeta.AffectedPublicKeys)
 	return &CreatorCoinTransferTransactionData{
 		AffectedPublicKeys:             affectedPublicKeys,
 		TimestampNanos:                 uint64(time.Now().UnixNano()),
