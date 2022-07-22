@@ -63,7 +63,7 @@ type LikeTransactionData struct {
 	AffectedPublicKeys             []*AffectedPublicKeyForJson `json:"affectedPublicKeys"`
 	TimestampNanos                 uint64                      `json:"timestampNanos"`
 	TransactorPublicKeyBase58Check string                      `json:"transactorPublicKeyBase58Check"`
-	LikedPostHashHex               string                      `json:"LikedPostHashHex"`
+	LikedPostHashHex               string                      `json:"likedPostHashHex"`
 	IsUnlike                       bool                        `json:"isUnlike"`
 }
 
