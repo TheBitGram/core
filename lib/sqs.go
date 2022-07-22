@@ -33,9 +33,8 @@ func NewSQSQueue(client *sqs.Client, queueUrl string, params *DeSoParams) *SQSQu
 }
 
 type AffectedPublicKeyForJson struct {
-	PublicKeyBase58Check string
-	// Metadata about how this public key was affected by the transaction.
-	Metadata string
+	PublicKeyBase58Check string `json:"publicKeyBase58Check"`
+	Metadata             string `json:"metadata"`
 }
 
 type PrivateMessageTransactionData struct {
@@ -64,7 +63,7 @@ type LikeTransactionData struct {
 	AffectedPublicKeys             []*AffectedPublicKeyForJson `json:"affectedPublicKeys"`
 	TimestampNanos                 uint64                      `json:"timestampNanos"`
 	TransactorPublicKeyBase58Check string                      `json:"transactorPublicKeyBase58Check"`
-	LikedPostHashHex               string                      `json:"LikedPostHashHex"`
+	LikedPostHashHex               string                      `json:"likedPostHashHex"`
 	IsUnlike                       bool                        `json:"isUnlike"`
 }
 
