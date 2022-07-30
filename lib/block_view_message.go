@@ -244,6 +244,12 @@ func (bav *UtxoView) GetMessagesForUser(publicKey []byte) (
 func (bav *UtxoView) GetLimitedMessagesForUser(ownerPublicKey []byte, minTimestampNanos uint64, maxTimestampNanos uint64, limit uint64) (
 	_messageEntries []*MessageEntry, _messagingGroupEntries []*MessagingGroupEntry, _err error) {
 
+	// Setting the prefix to a tstamp of MaxUint64 when unspecified should return all the messages
+	// for the public key in sorted order since MaxUint64 >> the maximum timestamp in the db.
+	if maxTimestampNanos == 0 {
+		maxTimestampNanos = math.MaxUint64
+	}
+
 	// This function will fetch up to limit number of messages for a public key. To accomplish
 	// this, we will have to fetch messages for each groups that the user has registered.
 
@@ -274,12 +280,12 @@ func (bav *UtxoView) GetLimitedMessagesForUser(ownerPublicKey []byte, minTimesta
 	for messageKey, messageEntry := range bav.MessageKeyToMessageEntry {
 		for _, messagingKeyEntry := range messagingGroupEntries {
 			if reflect.DeepEqual(messageKey.PublicKey[:], messagingKeyEntry.MessagingPublicKey[:]) {
-				// Use the sender messaging public key for the MessageKey to make sure they match the DB entries.
-				mapKey := MakeMessageKey(messageEntry.SenderMessagingPublicKey[:], messageEntry.TstampNanos)
-				if _, exists := messagesMap[mapKey]; exists {
+				if minTimestampNanos <= messageEntry.TstampNanos && messageEntry.TstampNanos <= maxTimestampNanos {
+					// Use the sender messaging public key for the MessageKey to make sure they match the DB entries.
+					mapKey := MakeMessageKey(messageEntry.SenderMessagingPublicKey[:], messageEntry.TstampNanos)
 					messagesMap[mapKey] = messageEntry
+					break
 				}
-				break
 			}
 		}
 	}

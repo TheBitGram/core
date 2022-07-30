@@ -1389,12 +1389,6 @@ func _enumerateLimitedMessagesForMessagingKeysReversedWithTxn(
 		//prefixes = append(prefixes, _dbSeekPrefixForMessagePartyPublicKey(keyEntry.MessagingPublicKey[:]))
 	}
 
-	// Setting the prefix to a tstamp of MaxUint64 when unspecified should return all the messages
-	// for the public key in sorted order since MaxUint64 >> the maximum timestamp in the db.
-	if maxTimestampNanos == 0 {
-		maxTimestampNanos = math.MaxUint64
-	}
-
 	// Initialize all iterators, add timestampKeyset bytes to the seek prefix so that we can iterate backwards.
 	var messagingIterators []*badger.Iterator
 	for _, prefix := range prefixes {
