@@ -6,8 +6,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil"
+	"github.com/deso-protocol/go-deadlock"
+	"github.com/dgraph-io/badger/v3"
 	"github.com/gernest/mention"
+	"github.com/golang/glog"
+	"github.com/pkg/errors"
 	"log"
 	"math"
 	"os"
@@ -17,13 +22,6 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
-
-	"github.com/dgraph-io/badger/v3"
-
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/deso-protocol/go-deadlock"
-	"github.com/golang/glog"
-	"github.com/pkg/errors"
 )
 
 // mempool.go contains all of the mempool logic for the DeSo node.
@@ -1110,6 +1108,7 @@ func (mp *DeSoMempool) tryAcceptTransaction(
 	// Calculate metadata
 	mempoolTx.TxMeta = ComputeTransactionMetadata(tx, mp.backupUniversalUtxoView, nil, totalNanosPurchasedBefore,
 		usdCentsPerBitcoinBefore, totalInput, totalOutput, txFee, uint64(0), utxoOps, blockHeight)
+
 	// send to sqs queue
 	mp.bc.sqsQueue.SendSQSTxnMessage(mempoolTx)
 

@@ -11,8 +11,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.15.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.18.5 // indirect
 	github.com/brianvoe/gofakeit v3.18.0+incompatible // indirect
-	github.com/NVIDIA/sortedmap v0.0.0-20210902154213-c8c741ed94c5
-	github.com/brianvoe/gofakeit v3.18.0+incompatible // indirect
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/btcsuite/btcutil v1.0.2
 	github.com/bwesterb/go-ristretto v1.2.0

@@ -1389,7 +1389,7 @@ func _enumerateLimitedMessagesForMessagingKeysReversedWithTxn(
 		//prefixes = append(prefixes, _dbSeekPrefixForMessagePartyPublicKey(keyEntry.MessagingPublicKey[:]))
 	}
 
-	// Initialize all iterators, add timestampKeyset bytes to the seek prefix so that we can iterate backwards.
+	// Initialize all iterators, add the 0xff byte to the seek prefix so that we can iterate backwards.
 	var messagingIterators []*badger.Iterator
 	for _, prefix := range prefixes {
 		opts := badger.DefaultIteratorOptions

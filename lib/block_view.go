@@ -1989,7 +1989,7 @@ func (bav *UtxoView) _connectUpdateGlobalParams(
 	newGlobalParamsEntry := *prevGlobalParamsEntry
 	extraData := txn.ExtraData
 	// Validate the public key. Only a paramUpdater is allowed to trigger this.
-	_, updaterIsParamUpdater := bav.Params.ParamUpdaterPublicKeys[MakePkMapKey(txn.PublicKey)]
+	_, updaterIsParamUpdater := GetParamUpdaterPublicKeys(blockHeight, bav.Params)[MakePkMapKey(txn.PublicKey)]
 	if !updaterIsParamUpdater {
 		return 0, 0, nil, RuleErrorUserNotAuthorizedToUpdateGlobalParams
 	}
@@ -2404,7 +2404,7 @@ func (bav *UtxoView) ConnectBlock(
 			txn, txHash, 0, uint32(blockHeader.Height), verifySignatures, false /*ignoreUtxos*/)
 		_, _ = totalInput, totalOutput // A bit surprising we don't use these
 		if err != nil {
-			return nil, errors.Wrapf(err, "ConnectBlock: ")
+			return nil, errors.Wrapf(err, "ConnectBlock: error connecting txn #%d", txIndex)
 		}
 
 		// Add the fees from this txn to the total fees. If any overflow occurs

@@ -74,8 +74,10 @@ func _dumpAndLoadMempool(mempool *DeSoMempool) {
 	newMempool := NewDeSoMempool(
 		mempool.bc, 0, /* rateLimitFeeRateNanosPerKB */
 		0 /* minFeeRateNanosPerKB */, "", true,
-		mempool.dataDir, mempoolDir)
+		mempool.dataDir, "")
 	mempool.mempoolDir = ""
+	newMempool.mempoolDir = mempoolDir
+	newMempool.LoadTxnsFromDB()
 	mempool.resetPool(newMempool)
 }
 
@@ -435,9 +437,9 @@ func TestBitcoinExchange(t *testing.T) {
 	//}()
 
 	// Make the moneyPkString the paramUpdater so they can update the exchange rate.
-	params.ParamUpdaterPublicKeys = make(map[PkMapKey]bool)
-	params.ParamUpdaterPublicKeys[MakePkMapKey(MustBase58CheckDecode(moneyPkString))] = true
-	paramsCopy.ParamUpdaterPublicKeys = params.ParamUpdaterPublicKeys
+	params.ExtraRegtestParamUpdaterKeys = make(map[PkMapKey]bool)
+	params.ExtraRegtestParamUpdaterKeys[MakePkMapKey(MustBase58CheckDecode(moneyPkString))] = true
+	paramsCopy.ExtraRegtestParamUpdaterKeys = params.ExtraRegtestParamUpdaterKeys
 
 	// Applying all the txns to the UtxoView should work. Include a rate update
 	// in the middle.
@@ -1165,9 +1167,9 @@ func TestBitcoinExchangeGlobalParams(t *testing.T) {
 	}
 
 	// Make the moneyPkString the paramUpdater so they can update the exchange rate.
-	params.ParamUpdaterPublicKeys = make(map[PkMapKey]bool)
-	params.ParamUpdaterPublicKeys[MakePkMapKey(MustBase58CheckDecode(moneyPkString))] = true
-	paramsCopy.ParamUpdaterPublicKeys = params.ParamUpdaterPublicKeys
+	params.ExtraRegtestParamUpdaterKeys = make(map[PkMapKey]bool)
+	params.ExtraRegtestParamUpdaterKeys[MakePkMapKey(MustBase58CheckDecode(moneyPkString))] = true
+	paramsCopy.ExtraRegtestParamUpdaterKeys = params.ExtraRegtestParamUpdaterKeys
 
 	// Applying all the txns to the UtxoView should work. Include a rate update
 	// in the middle.
@@ -1867,9 +1869,9 @@ func TestSpendOffOfUnminedTxnsBitcoinExchange(t *testing.T) {
 	}
 
 	// Make the moneyPkString the paramUpdater so they can update the exchange rate.
-	params.ParamUpdaterPublicKeys = make(map[PkMapKey]bool)
-	params.ParamUpdaterPublicKeys[MakePkMapKey(MustBase58CheckDecode(moneyPkString))] = true
-	paramsCopy.ParamUpdaterPublicKeys = params.ParamUpdaterPublicKeys
+	params.ExtraRegtestParamUpdaterKeys = make(map[PkMapKey]bool)
+	params.ExtraRegtestParamUpdaterKeys[MakePkMapKey(MustBase58CheckDecode(moneyPkString))] = true
+	paramsCopy.ExtraRegtestParamUpdaterKeys = params.ExtraRegtestParamUpdaterKeys
 
 	// Running the remaining transactions through the mempool should work and result
 	// in all of them being added.
@@ -2452,9 +2454,9 @@ func TestBitcoinExchangeWithAmountNanosNonZeroAtGenesis(t *testing.T) {
 	}
 
 	// Make the moneyPkString the paramUpdater so they can update the exchange rate.
-	params.ParamUpdaterPublicKeys = make(map[PkMapKey]bool)
-	params.ParamUpdaterPublicKeys[MakePkMapKey(MustBase58CheckDecode(moneyPkString))] = true
-	paramsCopy.ParamUpdaterPublicKeys = params.ParamUpdaterPublicKeys
+	params.ExtraRegtestParamUpdaterKeys = make(map[PkMapKey]bool)
+	params.ExtraRegtestParamUpdaterKeys[MakePkMapKey(MustBase58CheckDecode(moneyPkString))] = true
+	paramsCopy.ExtraRegtestParamUpdaterKeys = params.ExtraRegtestParamUpdaterKeys
 
 	// Applying all the txns to the UtxoView should work. Include a rate update
 	// in the middle.
@@ -2914,8 +2916,8 @@ func TestUpdateExchangeRate(t *testing.T) {
 	_, _ = mempool, miner
 
 	// Set the founder equal to the moneyPk
-	params.ParamUpdaterPublicKeys = make(map[PkMapKey]bool)
-	params.ParamUpdaterPublicKeys[MakePkMapKey(MustBase58CheckDecode(moneyPkString))] = true
+	params.ExtraRegtestParamUpdaterKeys = make(map[PkMapKey]bool)
+	params.ExtraRegtestParamUpdaterKeys[MakePkMapKey(MustBase58CheckDecode(moneyPkString))] = true
 
 	// Send money to m0 from moneyPk
 	_, _, _ = _doBasicTransferWithViewFlush(
