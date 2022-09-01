@@ -6,11 +6,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil"
 	"github.com/gernest/mention"
-	"github.com/golang/glog"
-	"github.com/pkg/errors"
 	"log"
 	"math"
 	"os"
@@ -20,6 +17,10 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/btcsuite/btcd/btcec"
+	"github.com/golang/glog"
+	"github.com/pkg/errors"
 )
 
 // mempool.go contains all of the mempool logic for the DeSo node.
