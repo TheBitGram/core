@@ -6,8 +6,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil"
 	"github.com/gernest/mention"
+	"github.com/golang/glog"
+	"github.com/pkg/errors"
 	"log"
 	"math"
 	"os"
@@ -17,10 +20,6 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
-
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/golang/glog"
-	"github.com/pkg/errors"
 )
 
 // mempool.go contains all of the mempool logic for the DeSo node.
@@ -378,7 +377,7 @@ func (mp *DeSoMempool) UpdateAfterConnectBlock(blk *MsgDeSoBlock) (_txnsAddedToM
 		0,     /* minFeeRateNanosPerKB */
 		"",    /*blockCypherAPIKey*/
 		false, /*runReadOnlyViewUpdater*/
-		""     /*dataDir*/, "")
+		"" /*dataDir*/, "")
 
 	// Get all the transactions from the old pool object.
 	oldMempoolTxns, oldUnconnectedTxns, err := mp._getTransactionsOrderedByTimeAdded()
