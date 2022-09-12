@@ -7,6 +7,9 @@ require (
 	github.com/NVIDIA/sortedmap v0.0.0-20210902154213-c8c741ed94c5
 	github.com/brianvoe/gofakeit v3.18.0+incompatible
 	github.com/btcsuite/btcd v0.21.0-beta
+	github.com/aws/aws-sdk-go-v2 v1.16.4 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.15.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.18.5 // indirect
 	github.com/btcsuite/btcutil v1.0.2
 	github.com/bxcodec/faker v2.0.1+incompatible
 	github.com/cloudflare/circl v1.1.0

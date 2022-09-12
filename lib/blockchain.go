@@ -405,6 +405,7 @@ type Blockchain struct {
 	db                              *badger.DB
 	postgres                        *Postgres
 	snapshot                        *Snapshot
+	sqsQueue                        *SQSQueue
 	timeSource                      chainlib.MedianTimeSource
 	trustedBlockProducerPublicKeys  map[PkMapKey]bool
 	trustedBlockProducerStartHeight uint64
@@ -618,6 +619,7 @@ func NewBlockchain(
 	timeSource chainlib.MedianTimeSource,
 	db *badger.DB,
 	postgres *Postgres,
+	sqsQueue *SQSQueue,
 	eventManager *EventManager,
 	snapshot *Snapshot,
 	archivalMode bool,
@@ -638,6 +640,7 @@ func NewBlockchain(
 	bc := &Blockchain{
 		db:                              db,
 		postgres:                        postgres,
+		sqsQueue:                        sqsQueue,
 		snapshot:                        snapshot,
 		timeSource:                      timeSource,
 		trustedBlockProducerPublicKeys:  trustedBlockProducerPublicKeys,
