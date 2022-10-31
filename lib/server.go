@@ -290,6 +290,11 @@ func (srv *Server) VerifyAndBroadcastTransactions(txns []*MsgDeSoTxn) error {
 	nextBlockHeight := currentBlockHeight + 1
 
 	for _, txn := range txns {
+		// We connect the transaction in the readOnlyUtxoViewCopy just so any subsequent transactions
+		// could depend on it as future inputs if desired. Requests are processed in a single thread,
+		// so we don't need a lock to modify this copy. Also, this really shouldn't fail, since this
+		// connect would have been called for universalUtxoView and backupUniversalUtxoView by the
+		// time we reach here.
 		if err := srv.blockchain.ValidateTransaction(
 			txn,
 			nextBlockHeight,
@@ -298,25 +303,12 @@ func (srv *Server) VerifyAndBroadcastTransactions(txns []*MsgDeSoTxn) error {
 		); err != nil {
 			return fmt.Errorf("VerifyAndBroadcastTransaction: Problem validating txn: %v", err)
 		}
+	}
 
+	for _, txn := range txns {
 		// Don't block for read only view yet, do that after all transactions in request is processed
 		if _, err := srv.BroadcastTransaction(txn, false); err != nil {
 			return fmt.Errorf("VerifyAndBroadcastTransaction: Problem broadcasting txn: %v", err)
-		}
-
-		txnBytes, err := txn.ToBytes(false)
-		if err != nil {
-			return fmt.Errorf("VerifyAndBroadcastTransaction: Problem serializing txn to bytes: %v", err)
-		}
-
-		// We connect the transaction in the readOnlyUtxoViewCopy just so any subsequent transactions
-		// could depend on it as future inputs if desired. Requests are processed in a single thread,
-		// so we don't need a lock to modify this copy. Also, this really shouldn't fail, since this
-		// connect would have been called for universalUtxoView and backupUniversalUtxoView by the
-		// time we reach here.
-		if _, _, _, _, err := readOnlyUtxoViewCopy._connectTransaction(
-			txn, txn.Hash(), int64(len(txnBytes)), nextBlockHeight, false, false); err != nil {
-			return fmt.Errorf("VerifyAndBroadcastTransaction: Problem connection txn: %v", err)
 		}
 	}
 
