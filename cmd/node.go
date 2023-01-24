@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/hex"
 	"flag"
 	"fmt"
@@ -12,6 +13,8 @@ import (
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/btcsuite/btcd/addrmgr"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/davecgh/go-spew/spew"
@@ -33,6 +36,7 @@ type Node struct {
 	Params   *lib.DeSoParams
 	Config   *Config
 	Postgres *lib.Postgres
+	SQSQueue *lib.SQSQueue
 
 	// IsRunning is false when a NewNode is created, set to true on Start(), set to false
 	// after Stop() is called. Mainly used in testing.
@@ -183,6 +187,17 @@ func (node *Node) Start(exitChannels ...*chan struct{}) {
 		}
 	}
 
+	if node.Config.SQSUri != "" {
+		queueURL := node.Config.SQSUri
+		cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"))
+		if err != nil {
+			panic(err)
+		}
+		// Create Amazon SQS API client using path style addressing.
+		client := sqs.NewFromConfig(cfg)
+		node.SQSQueue = lib.NewSQSQueue(client, queueURL, node.Params)
+	}
+
 	// Setup eventManager
 	eventManager := lib.NewEventManager()
 
@@ -197,6 +212,7 @@ func (node *Node) Start(exitChannels ...*chan struct{}) {
 		node.Config.ConnectIPs,
 		node.ChainDB,
 		node.Postgres,
+		node.SQSQueue,
 		node.Config.TargetOutboundPeers,
 		node.Config.MaxInboundPeers,
 		node.Config.MinerPublicKeys,

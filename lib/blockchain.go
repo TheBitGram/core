@@ -405,6 +405,7 @@ type Blockchain struct {
 	db                              *badger.DB
 	postgres                        *Postgres
 	snapshot                        *Snapshot
+	sqsQueue                        *SQSQueue
 	timeSource                      chainlib.MedianTimeSource
 	trustedBlockProducerPublicKeys  map[PkMapKey]bool
 	trustedBlockProducerStartHeight uint64
@@ -618,6 +619,7 @@ func NewBlockchain(
 	timeSource chainlib.MedianTimeSource,
 	db *badger.DB,
 	postgres *Postgres,
+	sqsQueue *SQSQueue,
 	eventManager *EventManager,
 	snapshot *Snapshot,
 	archivalMode bool,
@@ -638,6 +640,7 @@ func NewBlockchain(
 	bc := &Blockchain{
 		db:                              db,
 		postgres:                        postgres,
+		sqsQueue:                        sqsQueue,
 		snapshot:                        snapshot,
 		timeSource:                      timeSource,
 		trustedBlockProducerPublicKeys:  trustedBlockProducerPublicKeys,
@@ -2702,7 +2705,7 @@ func (bc *Blockchain) DisconnectBlocksToHeight(blockHeight uint64, snap *Snapsho
 // passed-in transaction in the pool and connect them before trying to connect the
 // passed-in transaction.
 func (bc *Blockchain) ValidateTransaction(
-	txnMsg *MsgDeSoTxn, blockHeight uint32, verifySignatures bool, mempool *DeSoMempool) error {
+	txnMsg *MsgDeSoTxn, blockHeight uint32, verifySignatures bool, getUtxoView func() (*UtxoView, error)) error {
 
 	// Create a new UtxoView. If we have access to a mempool object, use it to
 	// get an augmented view that factors in pending transactions.
@@ -2710,8 +2713,8 @@ func (bc *Blockchain) ValidateTransaction(
 	if err != nil {
 		return errors.Wrapf(err, "ValidateTransaction: Problem Problem creating new utxo view: ")
 	}
-	if mempool != nil {
-		utxoView, err = mempool.GetAugmentedUtxoViewForPublicKey(txnMsg.PublicKey, txnMsg)
+	if getUtxoView != nil {
+		utxoView, err = getUtxoView()
 		if err != nil {
 			return errors.Wrapf(err, "ValidateTransaction: Problem getting augmented UtxoView from mempool: ")
 		}
