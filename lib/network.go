@@ -273,7 +273,7 @@ const (
 	TxnStringDeleteUserAssociation        TxnString = "DELETE_USER_ASSOCIATION"
 	TxnStringCreatePostAssociation        TxnString = "CREATE_POST_ASSOCIATION"
 	TxnStringDeletePostAssociation        TxnString = "DELETE_POST_ASSOCIATION"
-	TxnStringAccessGroup                  TxnString = "ACCESS_GROUP_CREATE"
+	TxnStringAccessGroup                  TxnString = "ACCESS_GROUP"
 	TxnStringAccessGroupMembers           TxnString = "ACCESS_GROUP_MEMBERS"
 	TxnStringNewMessage                   TxnString = "NEW_MESSAGE"
 )
@@ -7453,9 +7453,9 @@ const (
 )
 
 const (
-	AccessGroupScopeStringAny     AccessGroupScopeString = "any"
-	AccessGroupScopeStringScoped  AccessGroupScopeString = "scoped"
-	AccessGroupScopeStringUnknown AccessGroupScopeString = "unknown"
+	AccessGroupScopeStringAny     AccessGroupScopeString = "Any"
+	AccessGroupScopeStringScoped  AccessGroupScopeString = "Scoped"
+	AccessGroupScopeStringUnknown AccessGroupScopeString = "Unknown"
 )
 
 func (scopeType AccessGroupScopeType) ToAccessGroupScopeString() AccessGroupScopeString {
@@ -7483,9 +7483,9 @@ func (scopeString AccessGroupScopeString) ToAccessGroupScopeType() AccessGroupSc
 func (scopeType AccessGroupScopeType) ToString() string {
 	switch scopeType {
 	case AccessGroupScopeTypeAny:
-		return "ANY"
+		return "Any"
 	case AccessGroupScopeTypeScoped:
-		return "SCOPED"
+		return "Scoped"
 	default:
 		return ""
 	}
