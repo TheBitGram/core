@@ -214,7 +214,7 @@ func NewLowDifficultyBlockchainWithParamsAndDb(params *DeSoParams, usePostgres b
 		}
 	}
 	chain, err := NewBlockchain([]string{blockSignerPk}, 0, 0,
-		&testParams, timesource, db, postgresDb, nil, snap, false)
+		&testParams, timesource, db, postgresDb, nil, nil, snap, false)
 	if err != nil {
 		log.Fatal(err)
 	}

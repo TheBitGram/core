@@ -107,6 +107,10 @@ type CreatorCoinTransferTransactionData struct {
 
 // Filter unnecessary fields and send txn to the configured SQS Queue
 func (sqsQueue *SQSQueue) SendSQSTxnMessage(mempoolTxn *MempoolTx) {
+	if sqsQueue == nil {
+		return
+	}
+
 	txn := mempoolTxn.Tx
 	var transactionData interface{}
 	switch txn.TxnMeta.GetTxnType() {
