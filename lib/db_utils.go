@@ -1603,7 +1603,7 @@ func DBGetMessageEntriesForPublicKey(handle *badger.DB, publicKey []byte) (
 
 func _enumerateLimitedMessagesForMessagingKeysReversedWithTxn(
 	txn *badger.Txn, messagingGroupEntries []*MessagingGroupEntry,
-	limit uint64) (_privateMessages []*MessageEntry, _err error) {
+	minTimestampNanos uint64, maxTimestampNanos uint64, limit uint64) (_privateMessages []*MessageEntry, _err error) {
 
 	// Users can have many messaging keys. By default, a users has the base messaging key, which
 	// is just their main public key. Users can also register messaging keys, e.g. keys like the
@@ -1626,9 +1626,7 @@ func _enumerateLimitedMessagesForMessagingKeysReversedWithTxn(
 		opts := badger.DefaultIteratorOptions
 		opts.Reverse = true
 		iterator := txn.NewIterator(opts)
-		// TODO: This will practically work since timestamps usually will not have the major byte set as 0xff; however
-		// 	any message sent with a timestamp larger than 0xff << 8 will not be covered by this seek.
-		iterator.Seek(append(prefix, 0xff))
+		iterator.Seek(append(prefix, EncodeUint64(maxTimestampNanos)...))
 		defer iterator.Close()
 		messagingIterators = append(messagingIterators, iterator)
 	}
@@ -1648,7 +1646,8 @@ func _enumerateLimitedMessagesForMessagingKeysReversedWithTxn(
 			// Get the timestamp from the item key
 			key := messagingIterators[ii].Item().Key()
 			rr := bytes.NewReader(key[len(prefixes[ii]):])
-			timestamp, err := ReadUvarint(rr)
+			var timestamp uint64
+			err := binary.Read(rr, binary.BigEndian, &timestamp)
 			if err != nil {
 				return nil, errors.Wrapf(err, "_enumerateLimitedMessagesForMessagingKeysReversedWithTxn: problem reading timestamp "+
 					"for messaging iterator from prefix (%v) at key (%v)", prefixes[ii], messagingIterators[ii].Item().Key())
@@ -1661,7 +1660,7 @@ func _enumerateLimitedMessagesForMessagingKeysReversedWithTxn(
 		}
 
 		// Now that we found the latest message, let's decode and process it.
-		if latestTimestampIndex == -1 {
+		if latestTimestampIndex == -1 || latestTimestamp < minTimestampNanos {
 			break
 		} else {
 			// Get the message bytes and decode the message.
@@ -1687,12 +1686,8 @@ func _enumerateLimitedMessagesForMessagingKeysReversedWithTxn(
 	return privateMessages, nil
 }
 
-func DBGetLimitedMessageForMessagingKeys(handle *badger.DB, messagingKeys []*MessagingGroupEntry, limit uint64) (
+func DBGetLimitedMessageForMessagingKeys(handle *badger.DB, messagingKeys []*MessagingGroupEntry, minTimestampNanos uint64, maxTimestampNanos uint64, limit uint64) (
 	_privateMessages []*MessageEntry, _err error) {
-
-	// Setting the prefix to a tstamp of zero should return all the messages
-	// for the public key in sorted order since 0 << the minimum timestamp in
-	// the db.
 
 	// Goes backwards to get messages in time sorted order.
 	// Limit the number of keys to speed up load times.
@@ -1700,7 +1695,7 @@ func DBGetLimitedMessageForMessagingKeys(handle *badger.DB, messagingKeys []*Mes
 
 	err := handle.Update(func(txn *badger.Txn) error {
 		var err error
-		_privateMessages, err = _enumerateLimitedMessagesForMessagingKeysReversedWithTxn(txn, messagingKeys, limit)
+		_privateMessages, err = _enumerateLimitedMessagesForMessagingKeysReversedWithTxn(txn, messagingKeys, minTimestampNanos, maxTimestampNanos, limit)
 		if err != nil {
 			return errors.Wrapf(err, "DBGetLimitedMessageForMessagingKeys: problem getting user messages")
 		}

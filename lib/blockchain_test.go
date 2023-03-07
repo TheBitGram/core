@@ -149,7 +149,7 @@ func NewTestBlockchain() (*Blockchain, *DeSoParams, *badger.DB) {
 	paramsCopy := DeSoTestnetParams
 
 	chain, err := NewBlockchain([]string{blockSignerPk}, 0, 0, &paramsCopy,
-		timesource, db, nil, nil, nil, false)
+		timesource, db, nil, nil, nil, nil, false)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -214,7 +214,7 @@ func NewLowDifficultyBlockchainWithParamsAndDb(params *DeSoParams, usePostgres b
 		}
 	}
 	chain, err := NewBlockchain([]string{blockSignerPk}, 0, 0,
-		&testParams, timesource, db, postgresDb, nil, snap, false)
+		&testParams, timesource, db, postgresDb, nil, nil, snap, false)
 	if err != nil {
 		log.Fatal(err)
 	}

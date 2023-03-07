@@ -57,6 +57,7 @@ func SetupRunFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().String("postgres-uri", "", "BETA: Use Postgres as the backing store for chain data."+
 		"When enabled, most data is stored in postgres although badger is still currently used for some state. Run your "+
 		"Postgres instance on the same machine as your node for optimal performance.")
+	cmd.PersistentFlags().String("sqs-uri", "", "BETA: Use SQS as a producer for mempool txns")
 	cmd.PersistentFlags().Uint32("max-sync-block-height", 0,
 		"Max sync block height")
 	// Hyper Sync

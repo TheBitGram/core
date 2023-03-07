@@ -227,7 +227,7 @@ func (srv *Server) GetMiner() *DeSoMiner {
 	return srv.miner
 }
 
-func (srv *Server) BroadcastTransaction(txn *MsgDeSoTxn) ([]*MempoolTx, error) {
+func (srv *Server) BroadcastTransaction(txn *MsgDeSoTxn, blockUntilReadOnlyViewRegenerated bool) ([]*MempoolTx, error) {
 	// Use the backendServer to add the transaction to the mempool and
 	// relay it to peers. When a transaction is created by the user there
 	// is no need to consider a rateLimit and also no need to verifySignatures
@@ -239,7 +239,9 @@ func (srv *Server) BroadcastTransaction(txn *MsgDeSoTxn) ([]*MempoolTx, error) {
 
 	// At this point, we know the transaction has been run through the mempool.
 	// Now wait for an update of the ReadOnlyUtxoView so we don't break anything.
-	srv.mempool.BlockUntilReadOnlyViewRegenerated()
+	if blockUntilReadOnlyViewRegenerated {
+		srv.mempool.BlockUntilReadOnlyViewRegenerated()
+	}
 
 	return mempoolTxs, nil
 }
@@ -253,14 +255,65 @@ func (srv *Server) VerifyAndBroadcastTransaction(txn *MsgDeSoTxn) error {
 		// transaction will be mined at the earliest.
 		blockHeight+1,
 		true,
-		srv.mempool)
+		srv.mempool.GetAugmentedUniversalView)
 	if err != nil {
 		return fmt.Errorf("VerifyAndBroadcastTransaction: Problem validating txn: %v", err)
 	}
 
-	if _, err := srv.BroadcastTransaction(txn); err != nil {
+	if _, err := srv.BroadcastTransaction(txn, true); err != nil {
 		return fmt.Errorf("VerifyAndBroadcastTransaction: Problem broadcasting txn: %v", err)
 	}
+
+	return nil
+}
+
+// VerifyAndBroadcastTransactions is virtually the batching version of VerifyAndBroadcastTransaction
+// above except for the following optimizations:
+//
+// 1) We use a single copy of the readonly view from DeSoMempool.GetAugmentedUniversalView for all
+// the requested transactions; this means that we can defer blocking for readonly view being
+// regenerated until after all transactions are processed.
+//
+// 2) To allow for transactions later in the slice to be able to use earlier transactions' outputs
+// as inputs, we will also be connecting transactions with the utxo view copy so Blockchain.ValidateTransaction
+// will continue to work as expected.
+func (srv *Server) VerifyAndBroadcastTransactions(txns []*MsgDeSoTxn) error {
+	readOnlyUtxoViewCopy, err := srv.mempool.GetAugmentedUniversalView()
+	if err != nil {
+		return fmt.Errorf("VerifyAndBroadcastTransaction: Problem copying utxo view: %v", err)
+	}
+	getReadOnlyUtxoViewCopy := func() (*UtxoView, error) { return readOnlyUtxoViewCopy, nil }
+
+	// Grab the block tip and use it as the height for validation.
+	currentBlockHeight := srv.blockchain.BlockTip().Height
+	// Add one since that is the min height that a mempool transaction would be mined at the earliest
+	nextBlockHeight := currentBlockHeight + 1
+
+	for _, txn := range txns {
+		// We connect the transaction in the readOnlyUtxoViewCopy just so any subsequent transactions
+		// could depend on it as future inputs if desired. Requests are processed in a single thread,
+		// so we don't need a lock to modify this copy. Also, this really shouldn't fail, since this
+		// connect would have been called for universalUtxoView and backupUniversalUtxoView by the
+		// time we reach here.
+		if err := srv.blockchain.ValidateTransaction(
+			txn,
+			nextBlockHeight,
+			true,
+			getReadOnlyUtxoViewCopy,
+		); err != nil {
+			return fmt.Errorf("VerifyAndBroadcastTransaction: Problem validating txn: %v", err)
+		}
+	}
+
+	for _, txn := range txns {
+		// Don't block for read only view yet, do that after all transactions in request is processed
+		if _, err := srv.BroadcastTransaction(txn, false); err != nil {
+			return fmt.Errorf("VerifyAndBroadcastTransaction: Problem broadcasting txn: %v", err)
+		}
+	}
+
+	// Finally do the blocking here to ensure readonly view is regenerated
+	srv.mempool.BlockUntilReadOnlyViewRegenerated()
 
 	return nil
 }
@@ -337,6 +390,7 @@ func NewServer(
 	_connectIps []string,
 	_db *badger.DB,
 	postgres *Postgres,
+	sqsQueue *SQSQueue,
 	_targetOutboundPeers uint32,
 	_maxInboundPeers uint32,
 	_minerPublicKeys []string,
@@ -429,7 +483,7 @@ func NewServer(
 
 	_chain, err := NewBlockchain(
 		_trustedBlockProducerPublicKeys, _trustedBlockProducerStartHeight, _maxSyncBlockHeight,
-		_params, timesource, _db, postgres, eventManager, _snapshot, archivalMode)
+		_params, timesource, _db, postgres, sqsQueue, eventManager, _snapshot, archivalMode)
 	if err != nil {
 		return nil, errors.Wrapf(err, "NewServer: Problem initializing blockchain"), true
 	}
